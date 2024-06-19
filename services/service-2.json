@@ -1,0 +1,14 @@
+{
+  "uri": "http://localhost:9090",
+  "every": 10,
+  "timeout": 10,
+  "accepted_http_status_codes": [
+    200
+  ],
+  "headers": [
+    {
+      "key": "apikey",
+      "value": "Some apikey"
+    }
+  ]
+}

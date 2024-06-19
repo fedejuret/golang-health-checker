@@ -1,0 +1,14 @@
+{
+  "uri": "http://localhost:8080",
+  "every": 5,
+  "timeout": 5,
+  "accepted_http_status_codes": [
+    404
+  ],
+  "headers": [
+    {
+      "key": "apikey",
+      "value": "Some apikey"
+    }
+  ]
+}
