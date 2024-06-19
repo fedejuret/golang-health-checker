@@ -26,6 +26,10 @@ func main() {
 			return nil
 		}
 
+		if filepath.Ext(path) != ".json" {
+			return nil
+		}
+
 		jsonFile, err := os.Open(path)
 		if err != nil {
 			log.Println(err)
