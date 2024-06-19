@@ -1,6 +1,6 @@
 {
   "uri": "http://localhost:8080",
-  "every": 5,
+  "every": 600,
   "timeout": 5,
   "accepted_http_status_codes": [
     200
