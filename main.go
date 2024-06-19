@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"github.com/fedejuret/golang-health-checker/loggers"
 	"github.com/fedejuret/golang-health-checker/structures"
 	"github.com/jasonlvhit/gocron"
 	"io"
@@ -10,7 +11,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"strconv"
+	"slices"
 	"time"
 )
 
@@ -86,6 +87,9 @@ func checkService(service structures.Service) {
 	response, err := client.Do(request)
 	if err != nil {
 		log.Println("Error making request:", err)
+		for _, logger := range service.Loggers {
+			dispatchNotification(service, logger, "Error making request: "+err.Error(), "error")
+		}
 		return
 	}
 	defer func(Body io.ReadCloser) {
@@ -95,18 +99,31 @@ func checkService(service structures.Service) {
 		}
 	}(response.Body)
 
-	if !containsStatusCode(service.AcceptedHTTPStatusCodes, response.StatusCode) {
-		log.Println("Request returned wrong status code")
+	success := slices.Contains(service.AcceptedHTTPStatusCodes, response.StatusCode)
+	var level string
+
+	if success {
+		level = "success"
+	} else {
+		level = "error"
 	}
 
-	log.Println("Service: " + service.URI + " returned status code: " + strconv.Itoa(response.StatusCode))
-}
-
-func containsStatusCode(slice []int, item int) bool {
-	for _, v := range slice {
-		if v == item {
-			return true
+	if len(service.Loggers) > 0 {
+		for _, logger := range service.Loggers {
+			if slices.Contains(logger.Level, level) {
+				dispatchNotification(service, logger, response.Status, level)
+			}
 		}
 	}
-	return false
+}
+
+func dispatchNotification(service structures.Service, logger structures.ServiceLogger, text string, level string) {
+
+	switch logger.Type {
+	case "file":
+		go loggers.File(service, logger, text)
+	case "discord":
+		go loggers.Discord(service, logger, text, level)
+	}
+
 }

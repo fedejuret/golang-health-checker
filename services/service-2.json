@@ -10,5 +10,12 @@
       "key": "apikey",
       "value": "Some apikey"
     }
+  ],
+  "loggers": [
+    {
+      "level": ["error", "success"],
+      "type": "file",
+      "path": "/home/federicojuretich/Dev/Projects/health-checker/services/logs/service-2.log"
+    }
   ]
 }

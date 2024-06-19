@@ -4,6 +4,7 @@
     <inspection_tool class="GoDfaErrorMayBeNotNil" enabled="true" level="WARNING" enabled_by_default="true">
       <functions>
         <function importPath="net/http" name="NewRequest" />
+        <function importPath="os" name="Stat" />
       </functions>
     </inspection_tool>
   </profile>
