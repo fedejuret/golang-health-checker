@@ -5,12 +5,20 @@ type ServiceHeader struct {
 	Value string `json:"value"`
 }
 
+type SmtpConfig struct {
+	Host     string `json:"host"`
+	Port     int    `json:"port"`
+	Username string `json:"username"`
+	Password string `json:"password"`
+}
+
 type ServiceLogger struct {
-	Level   []string `json:"level"`
-	Type    string   `json:"type"`
-	Webhook string   `json:"webhook,omitempty"`
-	To      []string `json:"to,omitempty"`
-	Path    string   `json:"path,omitempty"`
+	Level      []string   `json:"level"`
+	Type       string     `json:"type"`
+	Webhook    string     `json:"webhook,omitempty"`
+	To         []string   `json:"to,omitempty"`
+	Path       string     `json:"path,omitempty"`
+	SmtpConfig SmtpConfig `json:"smtp_config,omitempty"`
 }
 
 type Service struct {
