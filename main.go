@@ -128,6 +128,8 @@ func dispatchNotification(service structures.Service, logger structures.ServiceL
 		go loggers.File(service, logger, text)
 	case "discord":
 		go loggers.Discord(service, logger, text, level)
+	case "email":
+		go loggers.Email(service, logger, text)
 	}
 
 }

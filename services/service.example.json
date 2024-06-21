@@ -21,6 +21,20 @@
       "level": ["error"],
       "type": "file",
       "path": "/home/federicojuretich/Dev/Projects/health-checker/services/logs/service-1.log"
+    },
+    {
+      "level": ["error"],
+      "type": "email",
+      "to": [
+        "receiver1@email.com",
+        "receiver2@email.com"
+      ],
+      "smtp_config": {
+        "host": "",
+        "username": "",
+        "port": 465,
+        "password": ""
+      }
     }
   ]
 }
