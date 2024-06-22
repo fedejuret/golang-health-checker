@@ -18,6 +18,11 @@
       "webhook": "https://discord.com/api/webhooks/{CHANNEL_ID}/{WEBHOOK_ID}"
     },
     {
+      "level": ["error", "success"],
+      "type": "slack",
+      "webhook": ""
+    },
+    {
       "level": ["error"],
       "type": "file",
       "path": "/home/federicojuretich/Dev/Projects/health-checker/services/logs/service-1.log"
