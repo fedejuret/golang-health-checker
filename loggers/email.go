@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/fedejuret/golang-health-checker/structures"
 	gomail "gopkg.in/mail.v2"
+	"log"
 	"strings"
 	"time"
 )
@@ -27,8 +28,7 @@ func Email(service structures.Service, logger structures.ServiceLogger, response
 	d.TLSConfig = &tls.Config{InsecureSkipVerify: true}
 
 	if err := d.DialAndSend(m); err != nil {
-		fmt.Println(err)
-		panic(err)
+		log.Println(err)
 	}
 
 }
