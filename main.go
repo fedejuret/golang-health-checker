@@ -2,9 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"github.com/fedejuret/golang-health-checker/loggers"
-	"github.com/fedejuret/golang-health-checker/structures"
-	"github.com/jasonlvhit/gocron"
 	"io"
 	"io/fs"
 	"log"
@@ -12,50 +9,33 @@ import (
 	"os"
 	"path/filepath"
 	"slices"
+	"sync"
 	"time"
+
+	"github.com/fedejuret/golang-health-checker/loggers"
+	"github.com/fedejuret/golang-health-checker/structures"
+	"github.com/jasonlvhit/gocron"
 )
 
 func main() {
+	var wg sync.WaitGroup
+
 	err := filepath.Walk("services", func(path string, info fs.FileInfo, err error) error {
 		if err != nil {
 			log.Println(err)
 			return err
 		}
 
-		if info.IsDir() {
+		if info.IsDir() || filepath.Ext(path) != ".json" {
 			return nil
 		}
 
-		if filepath.Ext(path) != ".json" {
-			return nil
-		}
+		wg.Add(1)
+		go func(path string) {
+			defer wg.Done()
+			processServiceFile(path)
+		}(path)
 
-		jsonFile, err := os.Open(path)
-		if err != nil {
-			log.Println(err)
-			return err
-		}
-		defer func(jsonFile *os.File) {
-			err := jsonFile.Close()
-			if err != nil {
-				log.Println(err)
-			}
-		}(jsonFile)
-
-		byteValue, err := io.ReadAll(jsonFile)
-		if err != nil {
-			log.Println(err)
-			return err
-		}
-
-		var requestStructure structures.Service
-		err = json.Unmarshal(byteValue, &requestStructure)
-		if err != nil {
-			log.Println(err)
-			return err
-		}
-
-		registerCronJobs(requestStructure)
 		return nil
 	})
 
@@ -63,12 +43,37 @@ func main() {
 		log.Println(err)
 	}
 
+	wg.Wait()
 	<-gocron.Start()
+}
+
+func processServiceFile(path string) {
+	jsonFile, err := os.Open(path)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+	defer jsonFile.Close()
+
+	byteValue, err := io.ReadAll(jsonFile)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	var requestStructure structures.Service
+	err = json.Unmarshal(byteValue, &requestStructure)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	registerCronJobs(requestStructure)
 }
 
 func registerCronJobs(service structures.Service) {
 	gocron.Every(uint64(service.Every)).Second().Do(func() {
-		checkService(service)
+		go checkService(service)
 	})
 }
 
@@ -92,37 +97,26 @@ func checkService(service structures.Service) {
 	if err != nil {
 		log.Println("Error making request:", err)
 		for _, logger := range service.Loggers {
-			dispatchNotification(service, logger, "Error making request: "+err.Error(), "error")
+			go dispatchNotification(service, logger, "Error making request: "+err.Error(), "error")
 		}
 		return
 	}
-	defer func(Body io.ReadCloser) {
-		err := Body.Close()
-		if err != nil {
-			log.Println("Error closing response body:", err)
-		}
-	}(response.Body)
+	defer response.Body.Close()
 
 	success := slices.Contains(service.AcceptedHTTPStatusCodes, response.StatusCode)
-	var level string
-
+	level := "error"
 	if success {
 		level = "success"
-	} else {
-		level = "error"
 	}
 
-	if len(service.Loggers) > 0 {
-		for _, logger := range service.Loggers {
-			if slices.Contains(logger.Level, level) {
-				dispatchNotification(service, logger, response.Status, level)
-			}
+	for _, logger := range service.Loggers {
+		if slices.Contains(logger.Level, level) {
+			go dispatchNotification(service, logger, response.Status, level)
 		}
 	}
 }
 
 func dispatchNotification(service structures.Service, logger structures.ServiceLogger, text string, level string) {
-
 	switch logger.Type {
 	case "file":
 		go loggers.File(service, logger, text)
@@ -133,5 +127,4 @@ func dispatchNotification(service structures.Service, logger structures.ServiceL
 	case "email":
 		go loggers.Email(service, logger, text)
 	}
-
 }
