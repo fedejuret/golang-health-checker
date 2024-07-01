@@ -2,17 +2,18 @@ package loggers
 
 import (
 	"fmt"
-	"github.com/fedejuret/golang-health-checker/structures"
 	"os"
 	"path/filepath"
 	"time"
+
+	"github.com/fedejuret/golang-health-checker/structures"
 )
 
 func File(service structures.Service, logger structures.ServiceLogger, response string) {
 	dir := filepath.Dir(logger.Path)
 
 	if _, err := os.Stat(dir); os.IsNotExist(err) {
-		err := os.MkdirAll(dir, 0755)
+		err := os.MkdirAll(dir, 0644)
 		if err != nil {
 			panic(err.Error())
 		}
